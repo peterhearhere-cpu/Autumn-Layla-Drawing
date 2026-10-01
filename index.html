@@ -12,7 +12,7 @@
             width: 100vw;
             background-color: #f4f4f9;
             font-family: sans-serif;
-            touch-action: none;
+            touch-action: none; /* Critical for pointer events to prevent scrolling */
             overflow: hidden;
         }
         .toolbar {
@@ -103,7 +103,8 @@
             <button class="tool-btn" onclick="setMode('left', 'copy')">Copy</button>
             <button class="tool-btn" onclick="setMode('left', 'paste')">Paste</button>
         </div>
-        <button class="tool-btn" style="margin-top:auto" onclick="clearSide('left')">Clear Left</button>
+        <button class="tool-btn" style="margin-top:auto" onclick="undo()">Undo</button>
+        <button class="tool-btn" onclick="clearSide('left')">Clear Left</button>
     </div>
 
     <!-- Canvas Area -->
@@ -125,7 +126,8 @@
             <button class="tool-btn" onclick="setMode('right', 'copy')">Copy</button>
             <button class="tool-btn" onclick="setMode('right', 'paste')">Paste</button>
         </div>
-        <button class="tool-btn" style="margin-top:auto" onclick="clearSide('right')">Clear Right</button>
+        <button class="tool-btn" style="margin-top:auto" onclick="undo()">Undo</button>
+        <button class="tool-btn" onclick="clearSide('right')">Clear Right</button>
         <button class="tool-btn" onclick="saveArt()">Save Art</button>
     </div>
 
@@ -136,13 +138,17 @@
         const overlayCtx = overlay.getContext('2d');
         const container = document.getElementById('canvas-container');
 
-        // Independent state for both sides
+        // Independent state for tools
         const state = {
-            left:  { mode: 'draw', clipboard: null, clipW: 0, clipH: 0 },
-            right: { mode: 'draw', clipboard: null, clipW: 0, clipH: 0 }
+            left:  { mode: 'draw', clipboard: null },
+            right: { mode: 'draw', clipboard: null }
         };
 
-        const activeTouches = {};
+        // Undo History State
+        let history = [];
+        let historyStep = -1;
+
+        const activePointers = {};
 
         function resizeCanvas() {
             canvas.width = container.clientWidth;
@@ -151,9 +157,33 @@
             overlay.height = container.clientHeight;
             ctx.fillStyle = '#ffffff';
             ctx.fillRect(0, 0, canvas.width, canvas.height);
+            saveState(); // Save the initial blank canvas
         }
+        
         window.addEventListener('resize', resizeCanvas);
         resizeCanvas();
+
+        function saveState() {
+            // Remove any "future" history if they hit undo then draw again
+            if (historyStep < history.length - 1) {
+                history = history.slice(0, historyStep + 1);
+            }
+            // Save current frame
+            history.push(ctx.getImageData(0, 0, canvas.width, canvas.height));
+            // Keep maximum 15 undo steps to save memory
+            if (history.length > 15) {
+                history.shift();
+            } else {
+                historyStep++;
+            }
+        }
+
+        function undo() {
+            if (historyStep > 0) {
+                historyStep--;
+                ctx.putImageData(history[historyStep], 0, 0);
+            }
+        }
 
         function setMode(side, mode) {
             state[side].mode = mode;
@@ -174,90 +204,93 @@
             };
         }
 
-        canvas.addEventListener('touchstart', (e) => {
-            e.preventDefault();
+        // POINTER EVENTS - Works for Mouse, Touch, and Stylus
+        canvas.addEventListener('pointerdown', (e) => {
             const rect = canvas.getBoundingClientRect();
+            const x = e.clientX - rect.left;
+            const y = e.clientY - rect.top;
+            const tools = getToolSettings(x);
             
-            for (let i = 0; i < e.changedTouches.length; i++) {
-                const touch = e.changedTouches[i];
-                const x = touch.clientX - rect.left;
-                const y = touch.clientY - rect.top;
-                const tools = getToolSettings(x);
-                
-                activeTouches[touch.identifier] = { x, y, startX: x, startY: y, tools: tools };
+            activePointers[e.pointerId] = { x, y, startX: x, startY: y, tools: tools, hasDrawn: false };
 
-                if (tools.mode === 'draw') {
-                    ctx.beginPath();
-                    ctx.arc(x, y, tools.size / 2, 0, Math.PI * 2);
-                    ctx.fillStyle = tools.color;
-                    ctx.fill();
-                    ctx.beginPath();
-                } else if (tools.mode === 'fill') {
-                    floodFill(Math.floor(x), Math.floor(y), hexToRgb(tools.color));
-                } else if (tools.mode === 'paste' && state[tools.side].clipboard) {
-                    ctx.putImageData(state[tools.side].clipboard, x, y);
-                }
-            }
-        }, { passive: false });
-
-        canvas.addEventListener('touchmove', (e) => {
-            e.preventDefault();
-            const rect = canvas.getBoundingClientRect();
-
-            for (let i = 0; i < e.changedTouches.length; i++) {
-                const touch = e.changedTouches[i];
-                const x = touch.clientX - rect.left;
-                const y = touch.clientY - rect.top;
-                const touchData = activeTouches[touch.identifier];
-                if (!touchData) continue;
-
-                if (touchData.tools.mode === 'draw') {
-                    ctx.beginPath();
-                    ctx.moveTo(touchData.x, touchData.y);
-                    ctx.lineTo(x, y);
-                    ctx.strokeStyle = touchData.tools.color;
-                    ctx.lineWidth = touchData.tools.size;
-                    ctx.lineCap = 'round';
-                    ctx.lineJoin = 'round';
-                    ctx.stroke();
-                    touchData.x = x;
-                    touchData.y = y;
-                } else if (touchData.tools.mode === 'copy') {
-                    // Draw selection box on overlay
-                    overlayCtx.clearRect(0, 0, overlay.width, overlay.height);
-                    overlayCtx.setLineDash([5, 5]);
-                    overlayCtx.strokeStyle = '#000';
-                    overlayCtx.lineWidth = 2;
-                    overlayCtx.strokeRect(touchData.startX, touchData.startY, x - touchData.startX, y - touchData.startY);
-                }
-            }
-        }, { passive: false });
-
-        canvas.addEventListener('touchend', (e) => {
-            const rect = canvas.getBoundingClientRect();
-            for (let i = 0; i < e.changedTouches.length; i++) {
-                const touch = e.changedTouches[i];
-                const touchData = activeTouches[touch.identifier];
-                if (!touchData) continue;
-
-                if (touchData.tools.mode === 'copy') {
-                    const x = touch.clientX - rect.left;
-                    const y = touch.clientY - rect.top;
-                    const width = x - touchData.startX;
-                    const height = y - touchData.startY;
-                    
-                    if(Math.abs(width) > 5 && Math.abs(height) > 5) {
-                        // Normalize negative dimensions
-                        const sx = width < 0 ? x : touchData.startX;
-                        const sy = height < 0 ? y : touchData.startY;
-                        state[touchData.tools.side].clipboard = ctx.getImageData(sx, sy, Math.abs(width), Math.abs(height));
-                    }
-                    overlayCtx.clearRect(0, 0, overlay.width, overlay.height);
-                    setMode(touchData.tools.side, 'paste'); // Auto-switch to paste mode
-                }
-                delete activeTouches[touch.identifier];
+            if (tools.mode === 'draw') {
+                activePointers[e.pointerId].hasDrawn = true;
+                ctx.beginPath();
+                ctx.arc(x, y, tools.size / 2, 0, Math.PI * 2);
+                ctx.fillStyle = tools.color;
+                ctx.fill();
+                ctx.beginPath();
+            } else if (tools.mode === 'fill') {
+                floodFill(Math.floor(x), Math.floor(y), hexToRgb(tools.color));
+                saveState();
+            } else if (tools.mode === 'paste' && state[tools.side].clipboard) {
+                const clip = state[tools.side].clipboard;
+                // Center the paste precisely on where they tap
+                ctx.putImageData(clip, x - (clip.width / 2), y - (clip.height / 2));
+                saveState();
             }
         });
+
+        canvas.addEventListener('pointermove', (e) => {
+            const pointerData = activePointers[e.pointerId];
+            if (!pointerData) return;
+
+            const rect = canvas.getBoundingClientRect();
+            const x = e.clientX - rect.left;
+            const y = e.clientY - rect.top;
+
+            if (pointerData.tools.mode === 'draw') {
+                ctx.beginPath();
+                ctx.moveTo(pointerData.x, pointerData.y);
+                ctx.lineTo(x, y);
+                ctx.strokeStyle = pointerData.tools.color;
+                ctx.lineWidth = pointerData.tools.size;
+                ctx.lineCap = 'round';
+                ctx.lineJoin = 'round';
+                ctx.stroke();
+                
+                pointerData.x = x;
+                pointerData.y = y;
+            } else if (pointerData.tools.mode === 'copy') {
+                // Draw dotted selection box on overlay
+                overlayCtx.clearRect(0, 0, overlay.width, overlay.height);
+                overlayCtx.setLineDash([5, 5]);
+                overlayCtx.strokeStyle = '#000';
+                overlayCtx.lineWidth = 2;
+                overlayCtx.strokeRect(pointerData.startX, pointerData.startY, x - pointerData.startX, y - pointerData.startY);
+            }
+        });
+
+        function endPointer(e) {
+            const pointerData = activePointers[e.pointerId];
+            if (!pointerData) return;
+
+            const rect = canvas.getBoundingClientRect();
+            const x = e.clientX - rect.left;
+            const y = e.clientY - rect.top;
+
+            if (pointerData.tools.mode === 'copy') {
+                const width = x - pointerData.startX;
+                const height = y - pointerData.startY;
+                
+                // Only copy if they dragged a box larger than 5 pixels
+                if(Math.abs(width) > 5 && Math.abs(height) > 5) {
+                    const sx = width < 0 ? x : pointerData.startX;
+                    const sy = height < 0 ? y : pointerData.startY;
+                    state[pointerData.tools.side].clipboard = ctx.getImageData(sx, sy, Math.abs(width), Math.abs(height));
+                    setMode(pointerData.tools.side, 'paste'); // Auto-switch to paste
+                }
+                overlayCtx.clearRect(0, 0, overlay.width, overlay.height);
+            } else if (pointerData.tools.mode === 'draw' && pointerData.hasDrawn) {
+                saveState(); // Save state after finishing a drawing stroke
+            }
+            
+            delete activePointers[e.pointerId];
+        }
+
+        canvas.addEventListener('pointerup', endPointer);
+        canvas.addEventListener('pointercancel', endPointer);
+        canvas.addEventListener('pointerout', endPointer);
 
         // --- Utility Functions ---
         
@@ -266,6 +299,7 @@
             const xOffset = side === 'left' ? 0 : width;
             ctx.fillStyle = '#ffffff';
             ctx.fillRect(xOffset, 0, width, canvas.height);
+            saveState();
         }
 
         function saveArt() {
@@ -280,7 +314,7 @@
             return [ (bigint >> 16) & 255, (bigint >> 8) & 255, bigint & 255, 255 ];
         }
 
-        // Fast Scanline Flood Fill
+        // Scanline Flood Fill
         function floodFill(startX, startY, fillColor) {
             const imgData = ctx.getImageData(0, 0, canvas.width, canvas.height);
             const data = imgData.data;
