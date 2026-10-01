@@ -2,157 +2,322 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <!-- Prevents pinch-to-zoom and scaling on mobile devices -->
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Kids Drawing App</title>
+    <title>Autumn & Layla's Art Studio</title>
     <style>
-        body { 
-            margin: 0; 
-            display: flex; 
-            flex-direction: column; 
-            align-items: center; 
-            background-color: #f4f4f9; 
-            font-family: sans-serif; 
-            /* Prevents pull-to-refresh on mobile */
-            touch-action: none; 
+        body {
+            margin: 0;
+            display: flex;
+            height: 100vh;
+            width: 100vw;
+            background-color: #f4f4f9;
+            font-family: sans-serif;
+            touch-action: none;
+            overflow: hidden;
         }
-        #toolbar { 
-            width: 100%; 
-            padding: 15px 10px; 
-            background: #ffffff; 
-            box-shadow: 0 2px 5px rgba(0,0,0,0.1); 
-            display: flex; 
-            justify-content: center; 
+        .toolbar {
+            width: 90px;
+            background: #ffffff;
+            box-shadow: 0 0 10px rgba(0,0,0,0.2);
+            display: flex;
+            flex-direction: column;
             align-items: center;
-            gap: 15px; 
-            flex-wrap: wrap; 
-            z-index: 10; 
+            padding: 15px 5px;
+            gap: 15px;
+            z-index: 10;
         }
-        canvas { 
-            background: #ffffff; 
-            cursor: crosshair; 
-            box-shadow: 0 4px 10px rgba(0,0,0,0.1); 
-            margin-top: 20px; 
-            border-radius: 8px; 
+        .toolbar h3 {
+            margin: 0;
+            font-size: 14px;
+            text-align: center;
+            color: #333;
         }
-        button, input[type="color"], input[type="range"] { 
-            padding: 8px; 
-            font-size: 16px; 
-            border-radius: 5px; 
-            border: 1px solid #ccc; 
-            cursor: pointer; 
+        .tool-group {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 5px;
+            width: 100%;
         }
-        input[type="color"] {
-            padding: 0;
-            width: 40px;
-            height: 40px;
-            border: none;
-        }
-        button {
+        .tool-btn {
+            padding: 8px 5px;
+            font-size: 12px;
+            border-radius: 5px;
+            border: 1px solid #ccc;
+            cursor: pointer;
             background-color: #e0e0e0;
+            width: 90%;
             font-weight: bold;
         }
-        button:hover { 
-            background: #d0d0d0; 
+        .tool-btn.active {
+            background-color: #4CAF50;
+            color: white;
+            border-color: #388E3C;
+        }
+        input[type="color"] {
+            width: 50px;
+            height: 50px;
+            border: none;
+            padding: 0;
+            cursor: pointer;
+        }
+        input[type="range"] {
+            width: 80%;
+        }
+        #canvas-container {
+            flex-grow: 1;
+            position: relative;
+        }
+        canvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+        }
+        #drawingCanvas { z-index: 1; }
+        #overlayCanvas { z-index: 2; pointer-events: none; }
+        .divider {
+            position: absolute;
+            left: 50%;
+            top: 0;
+            bottom: 0;
+            width: 2px;
+            background: rgba(0,0,0,0.05);
+            z-index: 3;
+            pointer-events: none;
         }
     </style>
 </head>
 <body>
-    <div id="toolbar">
-        <input type="color" id="colorPicker" value="#ff0000" title="Choose Color">
-        <input type="range" id="brushSize" min="2" max="40" value="8" title="Brush Size">
-        <button id="clearBtn">Clear Canvas</button>
-        <button id="saveBtn">Save Art</button>
+
+    <!-- Left Toolbar -->
+    <div class="toolbar" id="left-tools">
+        <h3>Autumn</h3>
+        <input type="color" id="color-left" value="#FF1493">
+        <input type="range" id="size-left" min="2" max="40" value="8">
+        
+        <div class="tool-group">
+            <button class="tool-btn active" onclick="setMode('left', 'draw')">Draw</button>
+            <button class="tool-btn" onclick="setMode('left', 'fill')">Fill</button>
+            <button class="tool-btn" onclick="setMode('left', 'copy')">Copy</button>
+            <button class="tool-btn" onclick="setMode('left', 'paste')">Paste</button>
+        </div>
+        <button class="tool-btn" style="margin-top:auto" onclick="clearSide('left')">Clear Left</button>
     </div>
-    
-    <canvas id="drawingCanvas"></canvas>
+
+    <!-- Canvas Area -->
+    <div id="canvas-container">
+        <canvas id="drawingCanvas"></canvas>
+        <canvas id="overlayCanvas"></canvas>
+        <div class="divider"></div>
+    </div>
+
+    <!-- Right Toolbar -->
+    <div class="toolbar" id="right-tools">
+        <h3>Layla</h3>
+        <input type="color" id="color-right" value="#00BFFF">
+        <input type="range" id="size-right" min="2" max="40" value="8">
+        
+        <div class="tool-group">
+            <button class="tool-btn active" onclick="setMode('right', 'draw')">Draw</button>
+            <button class="tool-btn" onclick="setMode('right', 'fill')">Fill</button>
+            <button class="tool-btn" onclick="setMode('right', 'copy')">Copy</button>
+            <button class="tool-btn" onclick="setMode('right', 'paste')">Paste</button>
+        </div>
+        <button class="tool-btn" style="margin-top:auto" onclick="clearSide('right')">Clear Right</button>
+        <button class="tool-btn" onclick="saveArt()">Save Art</button>
+    </div>
 
     <script>
         const canvas = document.getElementById('drawingCanvas');
-        const ctx = canvas.getContext('2d');
-        const colorPicker = document.getElementById('colorPicker');
-        const brushSize = document.getElementById('brushSize');
-        const clearBtn = document.getElementById('clearBtn');
-        const saveBtn = document.getElementById('saveBtn');
+        const ctx = canvas.getContext('2d', { willReadFrequently: true });
+        const overlay = document.getElementById('overlayCanvas');
+        const overlayCtx = overlay.getContext('2d');
+        const container = document.getElementById('canvas-container');
 
-        // Size the canvas dynamically based on screen size
+        // Independent state for both sides
+        const state = {
+            left:  { mode: 'draw', clipboard: null, clipW: 0, clipH: 0 },
+            right: { mode: 'draw', clipboard: null, clipW: 0, clipH: 0 }
+        };
+
+        const activeTouches = {};
+
         function resizeCanvas() {
-            canvas.width = window.innerWidth * 0.9;
-            canvas.height = window.innerHeight * 0.75;
-            
-            // Fill with a white background so saved images aren't transparent
+            canvas.width = container.clientWidth;
+            canvas.height = container.clientHeight;
+            overlay.width = container.clientWidth;
+            overlay.height = container.clientHeight;
             ctx.fillStyle = '#ffffff';
             ctx.fillRect(0, 0, canvas.width, canvas.height);
         }
-        
         window.addEventListener('resize', resizeCanvas);
-        resizeCanvas(); // Initial sizing
+        resizeCanvas();
 
-        let isDrawing = false;
-        let lastX = 0;
-        let lastY = 0;
-
-        function startDrawing(e) {
-            isDrawing = true;
-            [lastX, lastY] = getCoordinates(e);
+        function setMode(side, mode) {
+            state[side].mode = mode;
+            const toolbar = document.getElementById(`${side}-tools`);
+            const buttons = toolbar.querySelectorAll('.tool-group .tool-btn');
+            buttons.forEach(btn => btn.classList.remove('active'));
+            const activeBtn = Array.from(buttons).find(b => b.textContent.toLowerCase() === mode);
+            if(activeBtn) activeBtn.classList.add('active');
         }
 
-        function draw(e) {
-            if (!isDrawing) return;
-            e.preventDefault(); // Critical: stops the page from scrolling while drawing
+        function getToolSettings(x) {
+            const side = x < canvas.width / 2 ? 'left' : 'right';
+            return {
+                side: side,
+                color: document.getElementById(`color-${side}`).value,
+                size: document.getElementById(`size-${side}`).value,
+                mode: state[side].mode
+            };
+        }
+
+        canvas.addEventListener('touchstart', (e) => {
+            e.preventDefault();
+            const rect = canvas.getBoundingClientRect();
             
-            const [currentX, currentY] = getCoordinates(e);
+            for (let i = 0; i < e.changedTouches.length; i++) {
+                const touch = e.changedTouches[i];
+                const x = touch.clientX - rect.left;
+                const y = touch.clientY - rect.top;
+                const tools = getToolSettings(x);
+                
+                activeTouches[touch.identifier] = { x, y, startX: x, startY: y, tools: tools };
 
-            ctx.beginPath();
-            ctx.moveTo(lastX, lastY);
-            ctx.lineTo(currentX, currentY);
-            ctx.strokeStyle = colorPicker.value;
-            ctx.lineWidth = brushSize.value;
-            ctx.lineCap = 'round';
-            ctx.lineJoin = 'round';
-            ctx.stroke();
-
-            [lastX, lastY] = [currentX, currentY];
-        }
-
-        function stopDrawing() {
-            isDrawing = false;
-            ctx.beginPath(); // Resets the path so the next line doesn't connect to the old one
-        }
-
-        // Handles both mouse coordinates and touch coordinates
-        function getCoordinates(e) {
-            if (e.touches && e.touches.length > 0) {
-                const rect = canvas.getBoundingClientRect();
-                return [
-                    e.touches[0].clientX - rect.left, 
-                    e.touches[0].clientY - rect.top
-                ];
+                if (tools.mode === 'draw') {
+                    ctx.beginPath();
+                    ctx.arc(x, y, tools.size / 2, 0, Math.PI * 2);
+                    ctx.fillStyle = tools.color;
+                    ctx.fill();
+                    ctx.beginPath();
+                } else if (tools.mode === 'fill') {
+                    floodFill(Math.floor(x), Math.floor(y), hexToRgb(tools.color));
+                } else if (tools.mode === 'paste' && state[tools.side].clipboard) {
+                    ctx.putImageData(state[tools.side].clipboard, x, y);
+                }
             }
-            return [e.offsetX, e.offsetY];
+        }, { passive: false });
+
+        canvas.addEventListener('touchmove', (e) => {
+            e.preventDefault();
+            const rect = canvas.getBoundingClientRect();
+
+            for (let i = 0; i < e.changedTouches.length; i++) {
+                const touch = e.changedTouches[i];
+                const x = touch.clientX - rect.left;
+                const y = touch.clientY - rect.top;
+                const touchData = activeTouches[touch.identifier];
+                if (!touchData) continue;
+
+                if (touchData.tools.mode === 'draw') {
+                    ctx.beginPath();
+                    ctx.moveTo(touchData.x, touchData.y);
+                    ctx.lineTo(x, y);
+                    ctx.strokeStyle = touchData.tools.color;
+                    ctx.lineWidth = touchData.tools.size;
+                    ctx.lineCap = 'round';
+                    ctx.lineJoin = 'round';
+                    ctx.stroke();
+                    touchData.x = x;
+                    touchData.y = y;
+                } else if (touchData.tools.mode === 'copy') {
+                    // Draw selection box on overlay
+                    overlayCtx.clearRect(0, 0, overlay.width, overlay.height);
+                    overlayCtx.setLineDash([5, 5]);
+                    overlayCtx.strokeStyle = '#000';
+                    overlayCtx.lineWidth = 2;
+                    overlayCtx.strokeRect(touchData.startX, touchData.startY, x - touchData.startX, y - touchData.startY);
+                }
+            }
+        }, { passive: false });
+
+        canvas.addEventListener('touchend', (e) => {
+            const rect = canvas.getBoundingClientRect();
+            for (let i = 0; i < e.changedTouches.length; i++) {
+                const touch = e.changedTouches[i];
+                const touchData = activeTouches[touch.identifier];
+                if (!touchData) continue;
+
+                if (touchData.tools.mode === 'copy') {
+                    const x = touch.clientX - rect.left;
+                    const y = touch.clientY - rect.top;
+                    const width = x - touchData.startX;
+                    const height = y - touchData.startY;
+                    
+                    if(Math.abs(width) > 5 && Math.abs(height) > 5) {
+                        // Normalize negative dimensions
+                        const sx = width < 0 ? x : touchData.startX;
+                        const sy = height < 0 ? y : touchData.startY;
+                        state[touchData.tools.side].clipboard = ctx.getImageData(sx, sy, Math.abs(width), Math.abs(height));
+                    }
+                    overlayCtx.clearRect(0, 0, overlay.width, overlay.height);
+                    setMode(touchData.tools.side, 'paste'); // Auto-switch to paste mode
+                }
+                delete activeTouches[touch.identifier];
+            }
+        });
+
+        // --- Utility Functions ---
+        
+        function clearSide(side) {
+            const width = canvas.width / 2;
+            const xOffset = side === 'left' ? 0 : width;
+            ctx.fillStyle = '#ffffff';
+            ctx.fillRect(xOffset, 0, width, canvas.height);
         }
 
-        // --- Mouse Events for Desktop ---
-        canvas.addEventListener('mousedown', startDrawing);
-        canvas.addEventListener('mousemove', draw);
-        canvas.addEventListener('mouseup', stopDrawing);
-        canvas.addEventListener('mouseout', stopDrawing);
-
-        // --- Touch Events for Tablets/Phones ---
-        // { passive: false } allows e.preventDefault() to work, preventing scrolling
-        canvas.addEventListener('touchstart', startDrawing, { passive: false });
-        canvas.addEventListener('touchmove', draw, { passive: false });
-        canvas.addEventListener('touchend', stopDrawing);
-
-        // --- Tool Logic ---
-        clearBtn.addEventListener('click', resizeCanvas);
-
-        saveBtn.addEventListener('click', () => {
+        function saveArt() {
             const link = document.createElement('a');
-            link.download = 'my-masterpiece.png';
+            link.download = 'our-masterpiece.png';
             link.href = canvas.toDataURL('image/png');
             link.click();
-        });
+        }
+
+        function hexToRgb(hex) {
+            const bigint = parseInt(hex.slice(1), 16);
+            return [ (bigint >> 16) & 255, (bigint >> 8) & 255, bigint & 255, 255 ];
+        }
+
+        // Fast Scanline Flood Fill
+        function floodFill(startX, startY, fillColor) {
+            const imgData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+            const data = imgData.data;
+            const w = canvas.width;
+            const h = canvas.height;
+            const startPos = (startY * w + startX) * 4;
+            const startColor = [data[startPos], data[startPos+1], data[startPos+2], data[startPos+3]];
+            
+            if (startColor[0] === fillColor[0] && startColor[1] === fillColor[1] && startColor[2] === fillColor[2]) return;
+
+            const matchColor = (pos) => data[pos] === startColor[0] && data[pos+1] === startColor[1] && data[pos+2] === startColor[2];
+            const colorPixel = (pos) => {
+                data[pos] = fillColor[0]; data[pos+1] = fillColor[1]; data[pos+2] = fillColor[2]; data[pos+3] = 255;
+            };
+
+            const stack = [[startX, startY]];
+            while (stack.length) {
+                let [x, y] = stack.pop();
+                let pos = (y * w + x) * 4;
+                while (y >= 0 && matchColor(pos)) { y--; pos -= w * 4; }
+                pos += w * 4; y++;
+                let reachLeft = false; let reachRight = false;
+                while (y < h && matchColor(pos)) {
+                    colorPixel(pos);
+                    if (x > 0) {
+                        if (matchColor(pos - 4)) { if (!reachLeft) { stack.push([x - 1, y]); reachLeft = true; } }
+                        else if (reachLeft) reachLeft = false;
+                    }
+                    if (x < w - 1) {
+                        if (matchColor(pos + 4)) { if (!reachRight) { stack.push([x + 1, y]); reachRight = true; } }
+                        else if (reachRight) reachRight = false;
+                    }
+                    y++; pos += w * 4;
+                }
+            }
+            ctx.putImageData(imgData, 0, 0);
+        }
     </script>
 </body>
 </html>
