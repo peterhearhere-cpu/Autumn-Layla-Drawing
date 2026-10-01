@@ -23,12 +23,13 @@
             flex-direction: column;
             align-items: center;
             padding: 15px 5px;
-            gap: 15px;
+            gap: 12px;
             z-index: 10;
+            overflow-y: auto;
         }
         .toolbar h3 {
             margin: 0;
-            font-size: 14px;
+            font-size: 16px;
             text-align: center;
             color: #333;
         }
@@ -48,18 +49,46 @@
             background-color: #e0e0e0;
             width: 90%;
             font-weight: bold;
+            transition: all 0.2s ease;
+        }
+        .tool-btn:active {
+            transform: scale(0.95);
         }
         .tool-btn.active {
             background-color: #4CAF50;
             color: white;
             border-color: #388E3C;
         }
+        .color-label {
+            font-size: 11px;
+            color: #666;
+            margin-bottom: -8px;
+            font-weight: bold;
+        }
         input[type="color"] {
             width: 50px;
-            height: 50px;
+            height: 40px;
             border: none;
             padding: 0;
             cursor: pointer;
+            border-radius: 4px;
+        }
+        .palette {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 4px;
+            width: 80%;
+        }
+        .swatch {
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            border: 1px solid #aaa;
+            cursor: pointer;
+            box-shadow: inset 0 1px 3px rgba(0,0,0,0.2);
+        }
+        .swatch:active {
+            transform: scale(0.9);
         }
         input[type="range"] {
             width: 80%;
@@ -94,7 +123,22 @@
     <!-- Left Toolbar -->
     <div class="toolbar" id="left-tools">
         <h3>Autumn</h3>
+        
+        <div class="color-label">Pen</div>
         <input type="color" id="color-left" value="#FF1493">
+        <div class="palette">
+            <div class="swatch" style="background: #FF0000;" onclick="setDrawColor('left', '#FF0000')"></div>
+            <div class="swatch" style="background: #FFFF00;" onclick="setDrawColor('left', '#FFFF00')"></div>
+            <div class="swatch" style="background: #008000;" onclick="setDrawColor('left', '#008000')"></div>
+            <div class="swatch" style="background: #0000FF;" onclick="setDrawColor('left', '#0000FF')"></div>
+            <div class="swatch" style="background: #000000;" onclick="setDrawColor('left', '#000000')"></div>
+            <div class="swatch" style="background: #FFFFFF;" onclick="setDrawColor('left', '#FFFFFF')"></div>
+        </div>
+
+        <div class="color-label">BG Color</div>
+        <input type="color" id="bg-left" value="#ffffff">
+
+        <div class="color-label">Size</div>
         <input type="range" id="size-left" min="2" max="40" value="8">
         
         <div class="tool-group">
@@ -118,7 +162,22 @@
     <!-- Right Toolbar -->
     <div class="toolbar" id="right-tools">
         <h3>Layla</h3>
+        
+        <div class="color-label">Pen</div>
         <input type="color" id="color-right" value="#00BFFF">
+        <div class="palette">
+            <div class="swatch" style="background: #FF0000;" onclick="setDrawColor('right', '#FF0000')"></div>
+            <div class="swatch" style="background: #FFFF00;" onclick="setDrawColor('right', '#FFFF00')"></div>
+            <div class="swatch" style="background: #008000;" onclick="setDrawColor('right', '#008000')"></div>
+            <div class="swatch" style="background: #0000FF;" onclick="setDrawColor('right', '#0000FF')"></div>
+            <div class="swatch" style="background: #000000;" onclick="setDrawColor('right', '#000000')"></div>
+            <div class="swatch" style="background: #FFFFFF;" onclick="setDrawColor('right', '#FFFFFF')"></div>
+        </div>
+
+        <div class="color-label">BG Color</div>
+        <input type="color" id="bg-right" value="#ffffff">
+
+        <div class="color-label">Size</div>
         <input type="range" id="size-right" min="2" max="40" value="8">
         
         <div class="tool-group">
@@ -153,13 +212,23 @@
             canvas.height = container.clientHeight;
             overlay.width = container.clientWidth;
             overlay.height = container.clientHeight;
-            ctx.fillStyle = '#ffffff';
-            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            
+            // Fill initial halves with their respective selected BG colors
+            const leftBg = document.getElementById('bg-left').value;
+            const rightBg = document.getElementById('bg-right').value;
+            
+            ctx.fillStyle = leftBg;
+            ctx.fillRect(0, 0, canvas.width / 2, canvas.height);
+            
+            ctx.fillStyle = rightBg;
+            ctx.fillRect(canvas.width / 2, 0, canvas.width / 2, canvas.height);
+
             saveState(); 
         }
         
         window.addEventListener('resize', resizeCanvas);
-        resizeCanvas();
+        // Delay initial resize slightly to ensure container dimensions are set
+        setTimeout(resizeCanvas, 50);
 
         function saveState() {
             if (historyStep < history.length - 1) {
@@ -189,6 +258,10 @@
             if(activeBtn) activeBtn.classList.add('active');
         }
 
+        function setDrawColor(side, hexColor) {
+            document.getElementById(`color-${side}`).value = hexColor;
+        }
+
         function getToolSettings(x) {
             const side = x < canvas.width / 2 ? 'left' : 'right';
             return {
@@ -196,10 +269,9 @@
                 color: document.getElementById(`color-${side}`).value,
                 size: document.getElementById(`size-${side}`).value,
                 mode: state[side].mode
-            };
+            }
         }
 
-        // Converts white pixels in an ImageData object to transparent
         function getTransparentCanvas(imgData) {
             const tempCanvas = document.createElement('canvas');
             tempCanvas.width = imgData.width;
@@ -214,7 +286,6 @@
             
             const data = newImgData.data;
             for (let i = 0; i < data.length; i += 4) {
-                // If pixel is pure white, set alpha to 0
                 if (data[i] === 255 && data[i+1] === 255 && data[i+2] === 255) {
                     data[i+3] = 0;
                 }
@@ -242,11 +313,8 @@
                 floodFill(Math.floor(x), Math.floor(y), hexToRgb(tools.color));
                 saveState();
             } else if (tools.mode === 'paste' && state[tools.side].clipboard) {
-                const clip = state[tools.side].clipboard;
-                const transparentCanvas = getTransparentCanvas(clip);
-                // drawImage respects transparency and overlays it cleanly
-                ctx.drawImage(transparentCanvas, x - (clip.width / 2), y - (clip.height / 2));
-                saveState();
+                // For scalable paste, we just initialize the pointer start positions here.
+                // The actual drawing happens on pointerup.
             }
         });
 
@@ -270,10 +338,12 @@
                 
                 pointerData.x = x;
                 pointerData.y = y;
-            } else if (pointerData.tools.mode === 'copy') {
+            } else if (pointerData.tools.mode === 'copy' || (pointerData.tools.mode === 'paste' && state[pointerData.tools.side].clipboard)) {
+                // Draw dashed bounding box for both copy and scalable paste previews
                 overlayCtx.clearRect(0, 0, overlay.width, overlay.height);
                 overlayCtx.setLineDash([5, 5]);
-                overlayCtx.strokeStyle = '#000';
+                // Use blue for paste preview, black for copy preview
+                overlayCtx.strokeStyle = pointerData.tools.mode === 'paste' ? '#00BFFF' : '#000';
                 overlayCtx.lineWidth = 2;
                 overlayCtx.strokeRect(pointerData.startX, pointerData.startY, x - pointerData.startX, y - pointerData.startY);
             }
@@ -298,6 +368,27 @@
                     setMode(pointerData.tools.side, 'paste'); 
                 }
                 overlayCtx.clearRect(0, 0, overlay.width, overlay.height);
+                
+            } else if (pointerData.tools.mode === 'paste' && state[pointerData.tools.side].clipboard) {
+                // Handle scalable paste
+                const width = x - pointerData.startX;
+                const height = y - pointerData.startY;
+                
+                if(Math.abs(width) > 5 && Math.abs(height) > 5) {
+                    const sx = width < 0 ? x : pointerData.startX;
+                    const sy = height < 0 ? y : pointerData.startY;
+                    const absWidth = Math.abs(width);
+                    const absHeight = Math.abs(height);
+                    
+                    const clip = state[pointerData.tools.side].clipboard;
+                    const transparentCanvas = getTransparentCanvas(clip);
+                    
+                    // Draw the scaled clipboard onto the main canvas
+                    ctx.drawImage(transparentCanvas, sx, sy, absWidth, absHeight);
+                    saveState();
+                }
+                overlayCtx.clearRect(0, 0, overlay.width, overlay.height);
+                
             } else if (pointerData.tools.mode === 'draw' && pointerData.hasDrawn) {
                 saveState(); 
             }
@@ -312,7 +403,9 @@
         function clearSide(side) {
             const width = canvas.width / 2;
             const xOffset = side === 'left' ? 0 : width;
-            ctx.fillStyle = '#ffffff';
+            const bgColor = document.getElementById(`bg-${side}`).value;
+            
+            ctx.fillStyle = bgColor;
             ctx.fillRect(xOffset, 0, width, canvas.height);
             saveState();
         }
