@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <!-- Prevents pinch-to-zoom and scaling on mobile devices -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Kids Drawing App</title>
+    <style>
+        body { 
+            margin: 0; 
+            display: flex; 
+            flex-direction: column; 
+            align-items: center; 
+            background-color: #f4f4f9; 
+            font-family: sans-serif; 
+            /* Prevents pull-to-refresh on mobile */
+            touch-action: none; 
+        }
+        #toolbar { 
+            width: 100%; 
+            padding: 15px 10px; 
+            background: #ffffff; 
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1); 
+            display: flex; 
+            justify-content: center; 
+            align-items: center;
+            gap: 15px; 
+            flex-wrap: wrap; 
+            z-index: 10; 
+        }
+        canvas { 
+            background: #ffffff; 
+            cursor: crosshair; 
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1); 
+            margin-top: 20px; 
+            border-radius: 8px; 
+        }
+        button, input[type="color"], input[type="range"] { 
+            padding: 8px; 
+            font-size: 16px; 
+            border-radius: 5px; 
+            border: 1px solid #ccc; 
+            cursor: pointer; 
+        }
+        input[type="color"] {
+            padding: 0;
+            width: 40px;
+            height: 40px;
+            border: none;
+        }
+        button {
+            background-color: #e0e0e0;
+            font-weight: bold;
+        }
+        button:hover { 
+            background: #d0d0d0; 
+        }
+    </style>
+</head>
+<body>
+    <div id="toolbar">
+        <input type="color" id="colorPicker" value="#ff0000" title="Choose Color">
+        <input type="range" id="brushSize" min="2" max="40" value="8" title="Brush Size">
+        <button id="clearBtn">Clear Canvas</button>
+        <button id="saveBtn">Save Art</button>
+    </div>
+    
+    <canvas id="drawingCanvas"></canvas>
+
+    <script>
+        const canvas = document.getElementById('drawingCanvas');
+        const ctx = canvas.getContext('2d');
+        const colorPicker = document.getElementById('colorPicker');
+        const brushSize = document.getElementById('brushSize');
+        const clearBtn = document.getElementById('clearBtn');
+        const saveBtn = document.getElementById('saveBtn');
+
+        // Size the canvas dynamically based on screen size
+        function resizeCanvas() {
+            canvas.width = window.innerWidth * 0.9;
+            canvas.height = window.innerHeight * 0.75;
+            
+            // Fill with a white background so saved images aren't transparent
+            ctx.fillStyle = '#ffffff';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+        }
+        
+        window.addEventListener('resize', resizeCanvas);
+        resizeCanvas(); // Initial sizing
+
+        let isDrawing = false;
+        let lastX = 0;
+        let lastY = 0;
+
+        function startDrawing(e) {
+            isDrawing = true;
+            [lastX, lastY] = getCoordinates(e);
+        }
+
+        function draw(e) {
+            if (!isDrawing) return;
+            e.preventDefault(); // Critical: stops the page from scrolling while drawing
+            
+            const [currentX, currentY] = getCoordinates(e);
+
+            ctx.beginPath();
+            ctx.moveTo(lastX, lastY);
+            ctx.lineTo(currentX, currentY);
+            ctx.strokeStyle = colorPicker.value;
+            ctx.lineWidth = brushSize.value;
+            ctx.lineCap = 'round';
+            ctx.lineJoin = 'round';
+            ctx.stroke();
+
+            [lastX, lastY] = [currentX, currentY];
+        }
+
+        function stopDrawing() {
+            isDrawing = false;
+            ctx.beginPath(); // Resets the path so the next line doesn't connect to the old one
+        }
+
+        // Handles both mouse coordinates and touch coordinates
+        function getCoordinates(e) {
+            if (e.touches && e.touches.length > 0) {
+                const rect = canvas.getBoundingClientRect();
+                return [
+                    e.touches[0].clientX - rect.left, 
+                    e.touches[0].clientY - rect.top
+                ];
+            }
+            return [e.offsetX, e.offsetY];
+        }
+
+        // --- Mouse Events for Desktop ---
+        canvas.addEventListener('mousedown', startDrawing);
+        canvas.addEventListener('mousemove', draw);
+        canvas.addEventListener('mouseup', stopDrawing);
+        canvas.addEventListener('mouseout', stopDrawing);
+
+        // --- Touch Events for Tablets/Phones ---
+        // { passive: false } allows e.preventDefault() to work, preventing scrolling
+        canvas.addEventListener('touchstart', startDrawing, { passive: false });
+        canvas.addEventListener('touchmove', draw, { passive: false });
+        canvas.addEventListener('touchend', stopDrawing);
+
+        // --- Tool Logic ---
+        clearBtn.addEventListener('click', resizeCanvas);
+
+        saveBtn.addEventListener('click', () => {
+            const link = document.createElement('a');
+            link.download = 'my-masterpiece.png';
+            link.href = canvas.toDataURL('image/png');
+            link.click();
+        });
+    </script>
+</body>
+</html>
