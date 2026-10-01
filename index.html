@@ -12,7 +12,7 @@
             width: 100vw;
             background-color: #f4f4f9;
             font-family: sans-serif;
-            touch-action: none; /* Critical for pointer events to prevent scrolling */
+            touch-action: none; 
             overflow: hidden;
         }
         .toolbar {
@@ -104,7 +104,8 @@
             <button class="tool-btn" onclick="setMode('left', 'paste')">Paste</button>
         </div>
         <button class="tool-btn" style="margin-top:auto" onclick="undo()">Undo</button>
-        <button class="tool-btn" onclick="clearSide('left')">Clear Left</button>
+        <button class="tool-btn" onclick="clearSide('left')">Clear</button>
+        <button class="tool-btn" onclick="saveArt()">Save Art</button>
     </div>
 
     <!-- Canvas Area -->
@@ -127,7 +128,7 @@
             <button class="tool-btn" onclick="setMode('right', 'paste')">Paste</button>
         </div>
         <button class="tool-btn" style="margin-top:auto" onclick="undo()">Undo</button>
-        <button class="tool-btn" onclick="clearSide('right')">Clear Right</button>
+        <button class="tool-btn" onclick="clearSide('right')">Clear</button>
         <button class="tool-btn" onclick="saveArt()">Save Art</button>
     </div>
 
@@ -138,16 +139,13 @@
         const overlayCtx = overlay.getContext('2d');
         const container = document.getElementById('canvas-container');
 
-        // Independent state for tools
         const state = {
             left:  { mode: 'draw', clipboard: null },
             right: { mode: 'draw', clipboard: null }
         };
 
-        // Undo History State
         let history = [];
         let historyStep = -1;
-
         const activePointers = {};
 
         function resizeCanvas() {
@@ -157,20 +155,17 @@
             overlay.height = container.clientHeight;
             ctx.fillStyle = '#ffffff';
             ctx.fillRect(0, 0, canvas.width, canvas.height);
-            saveState(); // Save the initial blank canvas
+            saveState(); 
         }
         
         window.addEventListener('resize', resizeCanvas);
         resizeCanvas();
 
         function saveState() {
-            // Remove any "future" history if they hit undo then draw again
             if (historyStep < history.length - 1) {
                 history = history.slice(0, historyStep + 1);
             }
-            // Save current frame
             history.push(ctx.getImageData(0, 0, canvas.width, canvas.height));
-            // Keep maximum 15 undo steps to save memory
             if (history.length > 15) {
                 history.shift();
             } else {
@@ -204,7 +199,30 @@
             };
         }
 
-        // POINTER EVENTS - Works for Mouse, Touch, and Stylus
+        // Converts white pixels in an ImageData object to transparent
+        function getTransparentCanvas(imgData) {
+            const tempCanvas = document.createElement('canvas');
+            tempCanvas.width = imgData.width;
+            tempCanvas.height = imgData.height;
+            const tempCtx = tempCanvas.getContext('2d');
+            
+            const newImgData = new ImageData(
+                new Uint8ClampedArray(imgData.data),
+                imgData.width,
+                imgData.height
+            );
+            
+            const data = newImgData.data;
+            for (let i = 0; i < data.length; i += 4) {
+                // If pixel is pure white, set alpha to 0
+                if (data[i] === 255 && data[i+1] === 255 && data[i+2] === 255) {
+                    data[i+3] = 0;
+                }
+            }
+            tempCtx.putImageData(newImgData, 0, 0);
+            return tempCanvas;
+        }
+
         canvas.addEventListener('pointerdown', (e) => {
             const rect = canvas.getBoundingClientRect();
             const x = e.clientX - rect.left;
@@ -225,8 +243,9 @@
                 saveState();
             } else if (tools.mode === 'paste' && state[tools.side].clipboard) {
                 const clip = state[tools.side].clipboard;
-                // Center the paste precisely on where they tap
-                ctx.putImageData(clip, x - (clip.width / 2), y - (clip.height / 2));
+                const transparentCanvas = getTransparentCanvas(clip);
+                // drawImage respects transparency and overlays it cleanly
+                ctx.drawImage(transparentCanvas, x - (clip.width / 2), y - (clip.height / 2));
                 saveState();
             }
         });
@@ -252,7 +271,6 @@
                 pointerData.x = x;
                 pointerData.y = y;
             } else if (pointerData.tools.mode === 'copy') {
-                // Draw dotted selection box on overlay
                 overlayCtx.clearRect(0, 0, overlay.width, overlay.height);
                 overlayCtx.setLineDash([5, 5]);
                 overlayCtx.strokeStyle = '#000';
@@ -273,16 +291,15 @@
                 const width = x - pointerData.startX;
                 const height = y - pointerData.startY;
                 
-                // Only copy if they dragged a box larger than 5 pixels
                 if(Math.abs(width) > 5 && Math.abs(height) > 5) {
                     const sx = width < 0 ? x : pointerData.startX;
                     const sy = height < 0 ? y : pointerData.startY;
                     state[pointerData.tools.side].clipboard = ctx.getImageData(sx, sy, Math.abs(width), Math.abs(height));
-                    setMode(pointerData.tools.side, 'paste'); // Auto-switch to paste
+                    setMode(pointerData.tools.side, 'paste'); 
                 }
                 overlayCtx.clearRect(0, 0, overlay.width, overlay.height);
             } else if (pointerData.tools.mode === 'draw' && pointerData.hasDrawn) {
-                saveState(); // Save state after finishing a drawing stroke
+                saveState(); 
             }
             
             delete activePointers[e.pointerId];
@@ -292,8 +309,6 @@
         canvas.addEventListener('pointercancel', endPointer);
         canvas.addEventListener('pointerout', endPointer);
 
-        // --- Utility Functions ---
-        
         function clearSide(side) {
             const width = canvas.width / 2;
             const xOffset = side === 'left' ? 0 : width;
@@ -314,7 +329,6 @@
             return [ (bigint >> 16) & 255, (bigint >> 8) & 255, bigint & 255, 255 ];
         }
 
-        // Scanline Flood Fill
         function floodFill(startX, startY, fillColor) {
             const imgData = ctx.getImageData(0, 0, canvas.width, canvas.height);
             const data = imgData.data;
