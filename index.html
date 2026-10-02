@@ -16,7 +16,7 @@
             overflow: hidden;
         }
         .toolbar {
-            width: 90px;
+            width: 105px;
             background: #ffffff;
             box-shadow: 0 0 10px rgba(0,0,0,0.2);
             display: flex;
@@ -72,7 +72,9 @@
             display: grid;
             grid-template-columns: repeat(3, 1fr);
             gap: 5px;
-            width: 85%;
+            width: 100%;
+            padding: 0 5px;
+            box-sizing: border-box;
             margin-top: 5px;
             justify-items: center;
         }
@@ -91,6 +93,23 @@
         .rainbow-swatch {
             background: conic-gradient(red, yellow, lime, aqua, blue, magenta, red);
             border: 2px solid #333;
+        }
+        .paste-options {
+            display: none;
+            width: 90%;
+            gap: 5px;
+            justify-content: space-between;
+            margin-top: 2px;
+        }
+        .paste-options button {
+            flex: 1;
+            padding: 4px;
+            font-size: 14px;
+            border-radius: 5px;
+            border: 1px solid #ccc;
+            cursor: pointer;
+            background-color: #e0e0e0;
+            transition: background-color 0.2s;
         }
         input[type="range"] {
             width: 85%;
@@ -161,14 +180,18 @@
         <input type="range" id="size-left" min="2" max="40" value="8">
         
         <div class="tool-group">
-            <button class="tool-btn active" onclick="setMode('left', 'draw')">Draw</button>
-            <button class="tool-btn" onclick="setMode('left', 'fill')">Fill</button>
-            <button class="tool-btn" onclick="setMode('left', 'copy')">Copy</button>
-            <button class="tool-btn" onclick="setMode('left', 'paste')">Paste</button>
+            <button class="tool-btn active" data-mode="draw" onclick="setMode('left', 'draw')">✏️ Draw</button>
+            <button class="tool-btn" data-mode="fill" onclick="setMode('left', 'fill')">🪣 Fill</button>
+            <button class="tool-btn" data-mode="copy" onclick="setMode('left', 'copy')">✂️ Copy</button>
+            <button class="tool-btn" data-mode="paste" onclick="setMode('left', 'paste')">📋 Paste</button>
+            <div id="paste-opts-left" class="paste-options">
+                <button onclick="transformClipboard('left', 'flip')" title="Flip Horizontal">↔️</button>
+                <button onclick="transformClipboard('left', 'rotate')" title="Rotate 90°">↻</button>
+            </div>
         </div>
-        <button class="tool-btn" style="margin-top:auto" onclick="undo()">Undo</button>
-        <button class="tool-btn" onclick="clearSide('left')">Clear</button>
-        <button class="tool-btn" onclick="saveArt()">Save Art</button>
+        <button class="tool-btn" style="margin-top:auto" onclick="undo()">↩️ Undo</button>
+        <button class="tool-btn" onclick="clearSide('left')">🗑️ Clear</button>
+        <button class="tool-btn" onclick="saveArt()">💾 Save Art</button>
     </div>
 
     <!-- Canvas Area -->
@@ -216,14 +239,18 @@
         <input type="range" id="size-right" min="2" max="40" value="8">
         
         <div class="tool-group">
-            <button class="tool-btn active" onclick="setMode('right', 'draw')">Draw</button>
-            <button class="tool-btn" onclick="setMode('right', 'fill')">Fill</button>
-            <button class="tool-btn" onclick="setMode('right', 'copy')">Copy</button>
-            <button class="tool-btn" onclick="setMode('right', 'paste')">Paste</button>
+            <button class="tool-btn active" data-mode="draw" onclick="setMode('right', 'draw')">✏️ Draw</button>
+            <button class="tool-btn" data-mode="fill" onclick="setMode('right', 'fill')">🪣 Fill</button>
+            <button class="tool-btn" data-mode="copy" onclick="setMode('right', 'copy')">✂️ Copy</button>
+            <button class="tool-btn" data-mode="paste" onclick="setMode('right', 'paste')">📋 Paste</button>
+            <div id="paste-opts-right" class="paste-options">
+                <button onclick="transformClipboard('right', 'flip')" title="Flip Horizontal">↔️</button>
+                <button onclick="transformClipboard('right', 'rotate')" title="Rotate 90°">↻</button>
+            </div>
         </div>
-        <button class="tool-btn" style="margin-top:auto" onclick="undo()">Undo</button>
-        <button class="tool-btn" onclick="clearSide('right')">Clear</button>
-        <button class="tool-btn" onclick="saveArt()">Save Art</button>
+        <button class="tool-btn" style="margin-top:auto" onclick="undo()">↩️ Undo</button>
+        <button class="tool-btn" onclick="clearSide('right')">🗑️ Clear</button>
+        <button class="tool-btn" onclick="saveArt()">💾 Save Art</button>
     </div>
 
     <script>
@@ -299,8 +326,56 @@
             const toolbar = document.getElementById(`${side}-tools`);
             const buttons = toolbar.querySelectorAll('.tool-group .tool-btn');
             buttons.forEach(btn => btn.classList.remove('active'));
-            const activeBtn = Array.from(buttons).find(b => b.textContent.toLowerCase() === mode);
+            // Use data-mode to find the exact button regardless of emoji content
+            const activeBtn = Array.from(buttons).find(b => b.dataset.mode === mode);
             if(activeBtn) activeBtn.classList.add('active');
+            
+            // Toggle flip/rotate buttons visibility when paste is active
+            const pasteOpts = document.getElementById(`paste-opts-${side}`);
+            if (mode === 'paste' && state[side].clipboard) {
+                pasteOpts.style.display = 'flex';
+            } else {
+                pasteOpts.style.display = 'none';
+            }
+        }
+        
+        function transformClipboard(side, action) {
+            const clip = state[side].clipboard;
+            if (!clip) return;
+
+            // Step 1: Put ImageData into a temporary canvas
+            const tempCanvas = document.createElement('canvas');
+            tempCanvas.width = clip.width;
+            tempCanvas.height = clip.height;
+            tempCanvas.getContext('2d').putImageData(clip, 0, 0);
+
+            // Step 2: Create a second canvas to apply the transform
+            const resCanvas = document.createElement('canvas');
+            const resCtx = resCanvas.getContext('2d');
+
+            if (action === 'flip') {
+                resCanvas.width = clip.width;
+                resCanvas.height = clip.height;
+                resCtx.translate(resCanvas.width, 0);
+                resCtx.scale(-1, 1);
+                resCtx.drawImage(tempCanvas, 0, 0);
+            } else if (action === 'rotate') {
+                resCanvas.width = clip.height;
+                resCanvas.height = clip.width;
+                resCtx.translate(resCanvas.width / 2, resCanvas.height / 2);
+                resCtx.rotate(Math.PI / 2);
+                resCtx.drawImage(tempCanvas, -clip.width / 2, -clip.height / 2);
+            }
+
+            // Step 3: Extract the transformed ImageData back into clipboard
+            state[side].clipboard = resCtx.getImageData(0, 0, resCanvas.width, resCanvas.height);
+            
+            // Provide a quick visual flash to the button to show it worked
+            const btn = document.querySelector(`#paste-opts-${side} button[title*="${action === 'flip' ? 'Flip' : 'Rotate'}"]`);
+            if (btn) {
+                btn.style.backgroundColor = '#90EE90';
+                setTimeout(() => btn.style.backgroundColor = '#e0e0e0', 150);
+            }
         }
 
         function setDrawColor(side, hexColor) {
