@@ -77,8 +77,8 @@
             justify-items: center;
         }
         .swatch {
-            width: 25px;
-            height: 25px;
+            width: 22px;
+            height: 22px;
             border-radius: 50%;
             border: 2px solid #ddd;
             cursor: pointer;
@@ -93,7 +93,8 @@
             border: 2px solid #333;
         }
         input[type="range"] {
-            width: 80%;
+            width: 85%;
+            margin-bottom: 5px;
         }
         #canvas-container {
             flex-grow: 1;
@@ -130,24 +131,29 @@
         <input type="color" id="color-left" value="#FF1493">
         
         <div class="palette">
-            <!-- Row 1 -->
-            <div class="swatch" style="background: #FF0000;" onclick="setDrawColor('left', '#FF0000')"></div>
-            <div class="swatch" style="background: #0000FF;" onclick="setDrawColor('left', '#0000FF')"></div>
-            <div class="swatch" style="background: #008000;" onclick="setDrawColor('left', '#008000')"></div>
-            <!-- Row 2 -->
-            <div class="swatch" style="background: #FFFF00;" onclick="setDrawColor('left', '#FFFF00')"></div>
-            <div class="swatch" style="background: #000000;" onclick="setDrawColor('left', '#000000')"></div>
-            <div class="swatch" style="background: #FFFFFF;" onclick="setDrawColor('left', '#FFFFFF')"></div>
-            <!-- Row 3 -->
-            <div class="swatch" style="background: #FFA500;" onclick="setDrawColor('left', '#FFA500')"></div> <!-- Orange -->
-            <div class="swatch" style="background: #FFC0CB;" onclick="setDrawColor('left', '#FFC0CB')"></div> <!-- Pink -->
-            <div class="swatch" style="background: #8B4513;" onclick="setDrawColor('left', '#8B4513')"></div> <!-- Brown -->
-            <!-- Row 4 -->
-            <div class="swatch" style="background: #D2B48C;" onclick="setDrawColor('left', '#D2B48C')"></div> <!-- Light Brown -->
-            <div class="swatch" style="background: #ADD8E6;" onclick="setDrawColor('left', '#ADD8E6')"></div> <!-- Light Blue -->
-            <div class="swatch" style="background: #90EE90;" onclick="setDrawColor('left', '#90EE90')"></div> <!-- Light Green -->
-            <!-- Row 5 -->
-            <div class="swatch" style="background: #800080;" onclick="setDrawColor('left', '#800080')"></div> <!-- Purple -->
+            <!-- Row 1: ROY -->
+            <div class="swatch" style="background: #FF0000;" onclick="setDrawColor('left', '#FF0000')" title="Red"></div>
+            <div class="swatch" style="background: #FFA500;" onclick="setDrawColor('left', '#FFA500')" title="Orange"></div>
+            <div class="swatch" style="background: #FFFF00;" onclick="setDrawColor('left', '#FFFF00')" title="Yellow"></div>
+            
+            <!-- Row 2: G B I/V (Purple) -->
+            <div class="swatch" style="background: #008000;" onclick="setDrawColor('left', '#008000')" title="Green"></div>
+            <div class="swatch" style="background: #0000FF;" onclick="setDrawColor('left', '#0000FF')" title="Blue"></div>
+            <div class="swatch" style="background: #800080;" onclick="setDrawColor('left', '#800080')" title="Purple"></div>
+            
+            <!-- Row 3: Pink, Brown, Light Blue -->
+            <div class="swatch" style="background: #FFC0CB;" onclick="setDrawColor('left', '#FFC0CB')" title="Pink"></div>
+            <div class="swatch" style="background: #8B4513;" onclick="setDrawColor('left', '#8B4513')" title="Brown"></div>
+            <div class="swatch" style="background: #ADD8E6;" onclick="setDrawColor('left', '#ADD8E6')" title="Light Blue"></div>
+
+            <!-- Row 4: Light Green, Black, White -->
+            <div class="swatch" style="background: #90EE90;" onclick="setDrawColor('left', '#90EE90')" title="Light Green"></div>
+            <div class="swatch" style="background: #000000;" onclick="setDrawColor('left', '#000000')" title="Black"></div>
+            <div class="swatch" style="background: #FFFFFF;" onclick="setDrawColor('left', '#FFFFFF')" title="White"></div>
+            
+            <!-- Row 5: Grey, Light Brown, Rainbow Picker -->
+            <div class="swatch" style="background: #808080;" onclick="setDrawColor('left', '#808080')" title="Grey"></div>
+            <div class="swatch" style="background: #D2B48C;" onclick="setDrawColor('left', '#D2B48C')" title="Light Brown"></div>
             <div class="swatch rainbow-swatch" onclick="document.getElementById('color-left').click()" title="More Colors"></div>
         </div>
 
@@ -180,24 +186,29 @@
         <input type="color" id="color-right" value="#00BFFF">
         
         <div class="palette">
-            <!-- Row 1 -->
-            <div class="swatch" style="background: #FF0000;" onclick="setDrawColor('right', '#FF0000')"></div>
-            <div class="swatch" style="background: #0000FF;" onclick="setDrawColor('right', '#0000FF')"></div>
-            <div class="swatch" style="background: #008000;" onclick="setDrawColor('right', '#008000')"></div>
-            <!-- Row 2 -->
-            <div class="swatch" style="background: #FFFF00;" onclick="setDrawColor('right', '#FFFF00')"></div>
-            <div class="swatch" style="background: #000000;" onclick="setDrawColor('right', '#000000')"></div>
-            <div class="swatch" style="background: #FFFFFF;" onclick="setDrawColor('right', '#FFFFFF')"></div>
-            <!-- Row 3 -->
-            <div class="swatch" style="background: #FFA500;" onclick="setDrawColor('right', '#FFA500')"></div> <!-- Orange -->
-            <div class="swatch" style="background: #FFC0CB;" onclick="setDrawColor('right', '#FFC0CB')"></div> <!-- Pink -->
-            <div class="swatch" style="background: #8B4513;" onclick="setDrawColor('right', '#8B4513')"></div> <!-- Brown -->
-            <!-- Row 4 -->
-            <div class="swatch" style="background: #D2B48C;" onclick="setDrawColor('right', '#D2B48C')"></div> <!-- Light Brown -->
-            <div class="swatch" style="background: #ADD8E6;" onclick="setDrawColor('right', '#ADD8E6')"></div> <!-- Light Blue -->
-            <div class="swatch" style="background: #90EE90;" onclick="setDrawColor('right', '#90EE90')"></div> <!-- Light Green -->
-            <!-- Row 5 -->
-            <div class="swatch" style="background: #800080;" onclick="setDrawColor('right', '#800080')"></div> <!-- Purple -->
+            <!-- Row 1: ROY -->
+            <div class="swatch" style="background: #FF0000;" onclick="setDrawColor('right', '#FF0000')" title="Red"></div>
+            <div class="swatch" style="background: #FFA500;" onclick="setDrawColor('right', '#FFA500')" title="Orange"></div>
+            <div class="swatch" style="background: #FFFF00;" onclick="setDrawColor('right', '#FFFF00')" title="Yellow"></div>
+            
+            <!-- Row 2: G B I/V (Purple) -->
+            <div class="swatch" style="background: #008000;" onclick="setDrawColor('right', '#008000')" title="Green"></div>
+            <div class="swatch" style="background: #0000FF;" onclick="setDrawColor('right', '#0000FF')" title="Blue"></div>
+            <div class="swatch" style="background: #800080;" onclick="setDrawColor('right', '#800080')" title="Purple"></div>
+            
+            <!-- Row 3: Pink, Brown, Light Blue -->
+            <div class="swatch" style="background: #FFC0CB;" onclick="setDrawColor('right', '#FFC0CB')" title="Pink"></div>
+            <div class="swatch" style="background: #8B4513;" onclick="setDrawColor('right', '#8B4513')" title="Brown"></div>
+            <div class="swatch" style="background: #ADD8E6;" onclick="setDrawColor('right', '#ADD8E6')" title="Light Blue"></div>
+
+            <!-- Row 4: Light Green, Black, White -->
+            <div class="swatch" style="background: #90EE90;" onclick="setDrawColor('right', '#90EE90')" title="Light Green"></div>
+            <div class="swatch" style="background: #000000;" onclick="setDrawColor('right', '#000000')" title="Black"></div>
+            <div class="swatch" style="background: #FFFFFF;" onclick="setDrawColor('right', '#FFFFFF')" title="White"></div>
+            
+            <!-- Row 5: Grey, Light Brown, Rainbow Picker -->
+            <div class="swatch" style="background: #808080;" onclick="setDrawColor('right', '#808080')" title="Grey"></div>
+            <div class="swatch" style="background: #D2B48C;" onclick="setDrawColor('right', '#D2B48C')" title="Light Brown"></div>
             <div class="swatch rainbow-swatch" onclick="document.getElementById('color-right').click()" title="More Colors"></div>
         </div>
 
@@ -230,6 +241,22 @@
         let history = [];
         let historyStep = -1;
         const activePointers = {};
+
+        // Attempt to lock screen orientation to landscape
+        async function lockLandscape() {
+            try {
+                if (screen.orientation && screen.orientation.lock) {
+                    await screen.orientation.lock('landscape');
+                }
+            } catch (error) {
+                // Silently fail if the browser/device doesn't support locking
+                // or if it requires full screen first.
+                console.log("Orientation lock failed or not supported:", error);
+            }
+        }
+        
+        // Call it on load
+        lockLandscape();
 
         function resizeCanvas() {
             canvas.width = container.clientWidth;
