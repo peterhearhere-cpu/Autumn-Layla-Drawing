@@ -66,29 +66,31 @@
             font-weight: bold;
         }
         input[type="color"] {
-            width: 50px;
-            height: 40px;
-            border: none;
-            padding: 0;
-            cursor: pointer;
-            border-radius: 4px;
+            display: none; /* Hide standard picker, replaced by rainbow button */
         }
         .palette {
             display: grid;
             grid-template-columns: repeat(3, 1fr);
-            gap: 4px;
-            width: 80%;
+            gap: 5px;
+            width: 85%;
+            margin-top: 5px;
+            justify-items: center;
         }
         .swatch {
-            width: 18px;
-            height: 18px;
+            width: 25px;
+            height: 25px;
             border-radius: 50%;
-            border: 1px solid #aaa;
+            border: 2px solid #ddd;
             cursor: pointer;
             box-shadow: inset 0 1px 3px rgba(0,0,0,0.2);
+            transition: transform 0.1s;
         }
         .swatch:active {
-            transform: scale(0.9);
+            transform: scale(0.85);
+        }
+        .rainbow-swatch {
+            background: conic-gradient(red, yellow, lime, aqua, blue, magenta, red);
+            border: 2px solid #333;
         }
         input[type="range"] {
             width: 80%;
@@ -124,21 +126,32 @@
     <div class="toolbar" id="left-tools">
         <h3>Autumn</h3>
         
-        <div class="color-label">Pen</div>
+        <div class="color-label">Colors</div>
         <input type="color" id="color-left" value="#FF1493">
+        
         <div class="palette">
+            <!-- Row 1 -->
             <div class="swatch" style="background: #FF0000;" onclick="setDrawColor('left', '#FF0000')"></div>
-            <div class="swatch" style="background: #FFFF00;" onclick="setDrawColor('left', '#FFFF00')"></div>
-            <div class="swatch" style="background: #008000;" onclick="setDrawColor('left', '#008000')"></div>
             <div class="swatch" style="background: #0000FF;" onclick="setDrawColor('left', '#0000FF')"></div>
+            <div class="swatch" style="background: #008000;" onclick="setDrawColor('left', '#008000')"></div>
+            <!-- Row 2 -->
+            <div class="swatch" style="background: #FFFF00;" onclick="setDrawColor('left', '#FFFF00')"></div>
             <div class="swatch" style="background: #000000;" onclick="setDrawColor('left', '#000000')"></div>
             <div class="swatch" style="background: #FFFFFF;" onclick="setDrawColor('left', '#FFFFFF')"></div>
+            <!-- Row 3 -->
+            <div class="swatch" style="background: #FFA500;" onclick="setDrawColor('left', '#FFA500')"></div> <!-- Orange -->
+            <div class="swatch" style="background: #FFC0CB;" onclick="setDrawColor('left', '#FFC0CB')"></div> <!-- Pink -->
+            <div class="swatch" style="background: #8B4513;" onclick="setDrawColor('left', '#8B4513')"></div> <!-- Brown -->
+            <!-- Row 4 -->
+            <div class="swatch" style="background: #D2B48C;" onclick="setDrawColor('left', '#D2B48C')"></div> <!-- Light Brown -->
+            <div class="swatch" style="background: #ADD8E6;" onclick="setDrawColor('left', '#ADD8E6')"></div> <!-- Light Blue -->
+            <div class="swatch" style="background: #90EE90;" onclick="setDrawColor('left', '#90EE90')"></div> <!-- Light Green -->
+            <!-- Row 5 -->
+            <div class="swatch" style="background: #800080;" onclick="setDrawColor('left', '#800080')"></div> <!-- Purple -->
+            <div class="swatch rainbow-swatch" onclick="document.getElementById('color-left').click()" title="More Colors"></div>
         </div>
 
-        <div class="color-label">BG Color</div>
-        <input type="color" id="bg-left" value="#ffffff">
-
-        <div class="color-label">Size</div>
+        <div class="color-label" style="margin-top: 5px;">Size</div>
         <input type="range" id="size-left" min="2" max="40" value="8">
         
         <div class="tool-group">
@@ -163,21 +176,32 @@
     <div class="toolbar" id="right-tools">
         <h3>Layla</h3>
         
-        <div class="color-label">Pen</div>
+        <div class="color-label">Colors</div>
         <input type="color" id="color-right" value="#00BFFF">
+        
         <div class="palette">
+            <!-- Row 1 -->
             <div class="swatch" style="background: #FF0000;" onclick="setDrawColor('right', '#FF0000')"></div>
-            <div class="swatch" style="background: #FFFF00;" onclick="setDrawColor('right', '#FFFF00')"></div>
-            <div class="swatch" style="background: #008000;" onclick="setDrawColor('right', '#008000')"></div>
             <div class="swatch" style="background: #0000FF;" onclick="setDrawColor('right', '#0000FF')"></div>
+            <div class="swatch" style="background: #008000;" onclick="setDrawColor('right', '#008000')"></div>
+            <!-- Row 2 -->
+            <div class="swatch" style="background: #FFFF00;" onclick="setDrawColor('right', '#FFFF00')"></div>
             <div class="swatch" style="background: #000000;" onclick="setDrawColor('right', '#000000')"></div>
             <div class="swatch" style="background: #FFFFFF;" onclick="setDrawColor('right', '#FFFFFF')"></div>
+            <!-- Row 3 -->
+            <div class="swatch" style="background: #FFA500;" onclick="setDrawColor('right', '#FFA500')"></div> <!-- Orange -->
+            <div class="swatch" style="background: #FFC0CB;" onclick="setDrawColor('right', '#FFC0CB')"></div> <!-- Pink -->
+            <div class="swatch" style="background: #8B4513;" onclick="setDrawColor('right', '#8B4513')"></div> <!-- Brown -->
+            <!-- Row 4 -->
+            <div class="swatch" style="background: #D2B48C;" onclick="setDrawColor('right', '#D2B48C')"></div> <!-- Light Brown -->
+            <div class="swatch" style="background: #ADD8E6;" onclick="setDrawColor('right', '#ADD8E6')"></div> <!-- Light Blue -->
+            <div class="swatch" style="background: #90EE90;" onclick="setDrawColor('right', '#90EE90')"></div> <!-- Light Green -->
+            <!-- Row 5 -->
+            <div class="swatch" style="background: #800080;" onclick="setDrawColor('right', '#800080')"></div> <!-- Purple -->
+            <div class="swatch rainbow-swatch" onclick="document.getElementById('color-right').click()" title="More Colors"></div>
         </div>
 
-        <div class="color-label">BG Color</div>
-        <input type="color" id="bg-right" value="#ffffff">
-
-        <div class="color-label">Size</div>
+        <div class="color-label" style="margin-top: 5px;">Size</div>
         <input type="range" id="size-right" min="2" max="40" value="8">
         
         <div class="tool-group">
@@ -213,15 +237,9 @@
             overlay.width = container.clientWidth;
             overlay.height = container.clientHeight;
             
-            // Fill initial halves with their respective selected BG colors
-            const leftBg = document.getElementById('bg-left').value;
-            const rightBg = document.getElementById('bg-right').value;
-            
-            ctx.fillStyle = leftBg;
-            ctx.fillRect(0, 0, canvas.width / 2, canvas.height);
-            
-            ctx.fillStyle = rightBg;
-            ctx.fillRect(canvas.width / 2, 0, canvas.width / 2, canvas.height);
+            // Fill initial canvas with pure white
+            ctx.fillStyle = '#ffffff';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
 
             saveState(); 
         }
@@ -259,6 +277,7 @@
         }
 
         function setDrawColor(side, hexColor) {
+            // Update the hidden color input to store the current color
             document.getElementById(`color-${side}`).value = hexColor;
         }
 
@@ -266,6 +285,7 @@
             const side = x < canvas.width / 2 ? 'left' : 'right';
             return {
                 side: side,
+                // Reads from the hidden native color picker input
                 color: document.getElementById(`color-${side}`).value,
                 size: document.getElementById(`size-${side}`).value,
                 mode: state[side].mode
@@ -314,7 +334,6 @@
                 saveState();
             } else if (tools.mode === 'paste' && state[tools.side].clipboard) {
                 // For scalable paste, we just initialize the pointer start positions here.
-                // The actual drawing happens on pointerup.
             }
         });
 
@@ -339,10 +358,8 @@
                 pointerData.x = x;
                 pointerData.y = y;
             } else if (pointerData.tools.mode === 'copy' || (pointerData.tools.mode === 'paste' && state[pointerData.tools.side].clipboard)) {
-                // Draw dashed bounding box for both copy and scalable paste previews
                 overlayCtx.clearRect(0, 0, overlay.width, overlay.height);
                 overlayCtx.setLineDash([5, 5]);
-                // Use blue for paste preview, black for copy preview
                 overlayCtx.strokeStyle = pointerData.tools.mode === 'paste' ? '#00BFFF' : '#000';
                 overlayCtx.lineWidth = 2;
                 overlayCtx.strokeRect(pointerData.startX, pointerData.startY, x - pointerData.startX, y - pointerData.startY);
@@ -370,7 +387,6 @@
                 overlayCtx.clearRect(0, 0, overlay.width, overlay.height);
                 
             } else if (pointerData.tools.mode === 'paste' && state[pointerData.tools.side].clipboard) {
-                // Handle scalable paste
                 const width = x - pointerData.startX;
                 const height = y - pointerData.startY;
                 
@@ -383,7 +399,6 @@
                     const clip = state[pointerData.tools.side].clipboard;
                     const transparentCanvas = getTransparentCanvas(clip);
                     
-                    // Draw the scaled clipboard onto the main canvas
                     ctx.drawImage(transparentCanvas, sx, sy, absWidth, absHeight);
                     saveState();
                 }
@@ -403,9 +418,9 @@
         function clearSide(side) {
             const width = canvas.width / 2;
             const xOffset = side === 'left' ? 0 : width;
-            const bgColor = document.getElementById(`bg-${side}`).value;
             
-            ctx.fillStyle = bgColor;
+            // Reverted to white fill for simpler kid-friendly UI
+            ctx.fillStyle = '#ffffff';
             ctx.fillRect(xOffset, 0, width, canvas.height);
             saveState();
         }
