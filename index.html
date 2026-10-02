@@ -11,14 +11,14 @@
             height: 100vh;
             width: 100vw;
             background-color: #f4f4f9;
-            font-family: sans-serif;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             touch-action: none; 
             overflow: hidden;
         }
         .toolbar {
             width: 105px;
             background: #ffffff;
-            box-shadow: 0 0 10px rgba(0,0,0,0.2);
+            box-shadow: 0 0 15px rgba(0,0,0,0.15);
             display: flex;
             flex-direction: column;
             align-items: center;
@@ -29,49 +29,58 @@
         }
         .toolbar h3 {
             margin: 0;
-            font-size: 16px;
+            font-size: 18px;
             text-align: center;
             color: #333;
+            font-weight: 800;
+            letter-spacing: 0.5px;
         }
         .tool-group {
             display: flex;
             flex-direction: column;
             align-items: center;
-            gap: 5px;
+            gap: 6px;
             width: 100%;
         }
         .tool-btn {
             padding: 8px 5px;
             font-size: 12px;
-            border-radius: 5px;
+            border-radius: 8px;
             border: 1px solid #ccc;
             cursor: pointer;
-            background-color: #e0e0e0;
+            background-color: #f8f9fa;
             width: 90%;
             font-weight: bold;
-            transition: all 0.2s ease;
+            color: #444;
+            transition: all 0.15s ease;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
         }
         .tool-btn:active {
             transform: scale(0.95);
+            box-shadow: 0 1px 2px rgba(0,0,0,0.1);
         }
         .tool-btn.active {
             background-color: #4CAF50;
             color: white;
             border-color: #388E3C;
+            box-shadow: inset 0 2px 4px rgba(0,0,0,0.2);
         }
         .color-label {
-            font-size: 11px;
+            font-size: 12px;
             color: #666;
-            margin-bottom: -8px;
+            margin-bottom: -6px;
             font-weight: bold;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
         }
         input[type="color"] {
-            display: none; /* Hide standard picker, replaced by rainbow button */
+            display: none; /* Hidden, triggered by rainbow button */
         }
+        
         .palette {
             display: grid;
             grid-template-columns: repeat(3, 1fr);
-            gap: 5px;
+            gap: 6px;
             width: 100%;
             padding: 0 5px;
             box-sizing: border-box;
@@ -84,15 +93,25 @@
             border-radius: 50%;
             border: 2px solid #ddd;
             cursor: pointer;
-            box-shadow: inset 0 1px 3px rgba(0,0,0,0.2);
-            transition: transform 0.1s;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            transition: transform 0.1s, border-color 0.1s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px; /* For the surprises emoji */
+            user-select: none;
         }
         .swatch:active {
             transform: scale(0.85);
         }
         .rainbow-swatch {
             background: conic-gradient(red, yellow, lime, aqua, blue, magenta, red);
-            border: 2px solid #333;
+            border: 2px solid #555;
+        }
+        .surprises-swatch {
+            background: #fff;
+            border: 2px solid #FFD700;
+            text-shadow: 0 1px 2px rgba(0,0,0,0.2);
         }
         .paste-options {
             display: none;
@@ -103,21 +122,24 @@
         }
         .paste-options button {
             flex: 1;
-            padding: 4px;
+            padding: 5px;
             font-size: 14px;
-            border-radius: 5px;
+            border-radius: 6px;
             border: 1px solid #ccc;
             cursor: pointer;
-            background-color: #e0e0e0;
+            background-color: #f8f9fa;
             transition: background-color 0.2s;
         }
         input[type="range"] {
             width: 85%;
             margin-bottom: 5px;
+            accent-color: #4CAF50;
         }
+        
         #canvas-container {
             flex-grow: 1;
             position: relative;
+            background-color: #fff;
         }
         canvas {
             position: absolute;
@@ -125,6 +147,7 @@
             left: 0;
             width: 100%;
             height: 100%;
+            touch-action: none;
         }
         #drawingCanvas { z-index: 1; }
         #overlayCanvas { z-index: 2; pointer-events: none; }
@@ -133,10 +156,74 @@
             left: 50%;
             top: 0;
             bottom: 0;
-            width: 2px;
-            background: rgba(0,0,0,0.05);
+            width: 3px;
+            background: rgba(0,0,0,0.08);
             z-index: 3;
             pointer-events: none;
+        }
+        
+        /* Modal Styles */
+        .modal-overlay {
+            position: fixed;
+            top: 0; left: 0; width: 100vw; height: 100vh;
+            background: rgba(0,0,0,0.6);
+            backdrop-filter: blur(3px);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 100;
+        }
+        .modal-content {
+            background: white;
+            padding: 25px;
+            border-radius: 20px;
+            text-align: center;
+            width: 85%;
+            max-width: 550px;
+            position: relative;
+            box-shadow: 0 15px 35px rgba(0,0,0,0.25);
+            border: 4px solid #4CAF50;
+        }
+        .modal-close {
+            position: absolute;
+            top: 10px; right: 15px;
+            font-size: 24px;
+            cursor: pointer;
+            background: none; border: none;
+            transition: transform 0.2s;
+        }
+        .modal-close:hover { transform: scale(1.1); }
+        .modal-sections {
+            display: flex;
+            gap: 20px;
+            margin-top: 20px;
+        }
+        .modal-section {
+            flex: 1;
+            background: #f9f9f9;
+            padding: 15px;
+            border-radius: 12px;
+            border: 2px dashed #ddd;
+        }
+        .stamp-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 12px;
+            margin-top: 15px;
+        }
+        .stamp-btn {
+            font-size: 28px;
+            background: white;
+            border: 2px solid #eee;
+            border-radius: 10px;
+            padding: 8px;
+            cursor: pointer;
+            transition: transform 0.1s, box-shadow 0.1s;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+        }
+        .stamp-btn:active {
+            transform: scale(0.85);
+            box-shadow: 0 1px 2px rgba(0,0,0,0.05);
         }
     </style>
 </head>
@@ -170,14 +257,14 @@
             <div class="swatch" style="background: #000000;" onclick="setDrawColor('left', '#000000')" title="Black"></div>
             <div class="swatch" style="background: #FFFFFF;" onclick="setDrawColor('left', '#FFFFFF')" title="White"></div>
             
-            <!-- Row 5: Grey, Light Brown, Rainbow Picker -->
-            <div class="swatch" style="background: #808080;" onclick="setDrawColor('left', '#808080')" title="Grey"></div>
+            <!-- Row 5: Surprises (Extras Modal), Light Brown, Rainbow Picker -->
+            <div class="swatch surprises-swatch" onclick="openExtras('left')" title="Surprises!">🎁</div>
             <div class="swatch" style="background: #D2B48C;" onclick="setDrawColor('left', '#D2B48C')" title="Light Brown"></div>
             <div class="swatch rainbow-swatch" onclick="document.getElementById('color-left').click()" title="More Colors"></div>
         </div>
 
         <div class="color-label" style="margin-top: 5px;">Size</div>
-        <input type="range" id="size-left" min="2" max="40" value="8">
+        <input type="range" id="size-left" min="2" max="50" value="10">
         
         <div class="tool-group">
             <button class="tool-btn active" data-mode="draw" onclick="setMode('left', 'draw')">✏️ Draw</button>
@@ -190,8 +277,8 @@
             </div>
         </div>
         <button class="tool-btn" style="margin-top:auto" onclick="undo()">↩️ Undo</button>
-        <button class="tool-btn" onclick="clearSide('left')">🗑️ Clear</button>
-        <button class="tool-btn" onclick="saveArt()">💾 Save Art</button>
+        <button class="tool-btn" onclick="clearSide('left')">🗑️️ Clear</button>
+        <button class="tool-btn" onclick="saveArt()">💾 Save</button>
     </div>
 
     <!-- Canvas Area -->
@@ -229,14 +316,14 @@
             <div class="swatch" style="background: #000000;" onclick="setDrawColor('right', '#000000')" title="Black"></div>
             <div class="swatch" style="background: #FFFFFF;" onclick="setDrawColor('right', '#FFFFFF')" title="White"></div>
             
-            <!-- Row 5: Grey, Light Brown, Rainbow Picker -->
-            <div class="swatch" style="background: #808080;" onclick="setDrawColor('right', '#808080')" title="Grey"></div>
+            <!-- Row 5: Surprises (Extras Modal), Light Brown, Rainbow Picker -->
+            <div class="swatch surprises-swatch" onclick="openExtras('right')" title="Surprises!">🎁</div>
             <div class="swatch" style="background: #D2B48C;" onclick="setDrawColor('right', '#D2B48C')" title="Light Brown"></div>
             <div class="swatch rainbow-swatch" onclick="document.getElementById('color-right').click()" title="More Colors"></div>
         </div>
 
         <div class="color-label" style="margin-top: 5px;">Size</div>
-        <input type="range" id="size-right" min="2" max="40" value="8">
+        <input type="range" id="size-right" min="2" max="50" value="10">
         
         <div class="tool-group">
             <button class="tool-btn active" data-mode="draw" onclick="setMode('right', 'draw')">✏️ Draw</button>
@@ -250,7 +337,40 @@
         </div>
         <button class="tool-btn" style="margin-top:auto" onclick="undo()">↩️ Undo</button>
         <button class="tool-btn" onclick="clearSide('right')">🗑️ Clear</button>
-        <button class="tool-btn" onclick="saveArt()">💾 Save Art</button>
+        <button class="tool-btn" onclick="saveArt()">💾 Save</button>
+    </div>
+
+    <!-- Extras Modal -->
+    <div id="extrasModal" class="modal-overlay">
+        <div class="modal-content">
+            <button class="modal-close" onclick="closeExtras()">❌</button>
+            <h2 style="margin-top: 0; color: #333;">Fun Surprises! 🎁</h2>
+            <div class="modal-sections">
+                <div class="modal-section">
+                    <h3 style="margin-top: 0; color: #555;">Stamps</h3>
+                    <div class="stamp-grid">
+                        <button class="stamp-btn" onclick="selectStamp('⭐')">⭐</button>
+                        <button class="stamp-btn" onclick="selectStamp('❤️')">❤️</button>
+                        <button class="stamp-btn" onclick="selectStamp('🐶')">🐶</button>
+                        <button class="stamp-btn" onclick="selectStamp('🐱')">🐱</button>
+                        <button class="stamp-btn" onclick="selectStamp('🌸')">🌸</button>
+                        <button class="stamp-btn" onclick="selectStamp('🦋')">🦋</button>
+                        <button class="stamp-btn" onclick="selectStamp('🚗')">🚗</button>
+                        <button class="stamp-btn" onclick="selectStamp('✈️')">✈️</button>
+                        <button class="stamp-btn" onclick="selectStamp('🍎')">🍎</button>
+                        <button class="stamp-btn" onclick="selectStamp('🎈')">🎈</button>
+                        <button class="stamp-btn" onclick="selectStamp('🧸')">🧸</button>
+                        <button class="stamp-btn" onclick="selectStamp('👑')">👑</button>
+                    </div>
+                </div>
+                <div class="modal-section" style="display: flex; flex-direction: column; justify-content: center;">
+                    <h3 style="margin-top: 0; color: #555;">Coloring Pages</h3>
+                    <p style="font-size: 13px; color: #777;">Ask Mum to load a picture!</p>
+                    <input type="file" id="imageLoader" accept="image/*" style="display:none">
+                    <button class="tool-btn" style="width: 100%; padding: 15px; font-size: 16px; margin-top: 10px; background-color: #4CAF50; color: white;" onclick="document.getElementById('imageLoader').click()">📂 Load Picture</button>
+                </div>
+            </div>
+        </div>
     </div>
 
     <script>
@@ -261,8 +381,8 @@
         const container = document.getElementById('canvas-container');
 
         const state = {
-            left:  { mode: 'draw', clipboard: null },
-            right: { mode: 'draw', clipboard: null }
+            left:  { mode: 'draw', clipboard: null, stamp: null },
+            right: { mode: 'draw', clipboard: null, stamp: null }
         };
 
         let history = [];
@@ -276,13 +396,10 @@
                     await screen.orientation.lock('landscape');
                 }
             } catch (error) {
-                // Silently fail if the browser/device doesn't support locking
-                // or if it requires full screen first.
-                console.log("Orientation lock failed or not supported:", error);
+                // Silently fail if not supported or requires user gesture/fullscreen
+                console.log("Landscape lock attempt:", error);
             }
         }
-        
-        // Call it on load
         lockLandscape();
 
         function resizeCanvas() {
@@ -294,12 +411,10 @@
             // Fill initial canvas with pure white
             ctx.fillStyle = '#ffffff';
             ctx.fillRect(0, 0, canvas.width, canvas.height);
-
             saveState(); 
         }
         
         window.addEventListener('resize', resizeCanvas);
-        // Delay initial resize slightly to ensure container dimensions are set
         setTimeout(resizeCanvas, 50);
 
         function saveState() {
@@ -325,12 +440,15 @@
             state[side].mode = mode;
             const toolbar = document.getElementById(`${side}-tools`);
             const buttons = toolbar.querySelectorAll('.tool-group .tool-btn');
+            
+            // Remove active class from regular tool buttons
             buttons.forEach(btn => btn.classList.remove('active'));
-            // Use data-mode to find the exact button regardless of emoji content
+            
+            // Re-apply active class if it's a standard tool mode
             const activeBtn = Array.from(buttons).find(b => b.dataset.mode === mode);
             if(activeBtn) activeBtn.classList.add('active');
             
-            // Toggle flip/rotate buttons visibility when paste is active
+            // Toggle flip/rotate options visibility when paste is active
             const pasteOpts = document.getElementById(`paste-opts-${side}`);
             if (mode === 'paste' && state[side].clipboard) {
                 pasteOpts.style.display = 'flex';
@@ -338,18 +456,32 @@
                 pasteOpts.style.display = 'none';
             }
         }
-        
+
+        function setDrawColor(side, hexColor) {
+            document.getElementById(`color-${side}`).value = hexColor;
+            // Switch back to draw mode automatically when picking a color
+            setMode(side, 'draw'); 
+        }
+
+        function getToolSettings(x) {
+            const side = x < canvas.width / 2 ? 'left' : 'right';
+            return {
+                side: side,
+                color: document.getElementById(`color-${side}`).value,
+                size: document.getElementById(`size-${side}`).value,
+                mode: state[side].mode
+            }
+        }
+
         function transformClipboard(side, action) {
             const clip = state[side].clipboard;
             if (!clip) return;
 
-            // Step 1: Put ImageData into a temporary canvas
             const tempCanvas = document.createElement('canvas');
             tempCanvas.width = clip.width;
             tempCanvas.height = clip.height;
             tempCanvas.getContext('2d').putImageData(clip, 0, 0);
 
-            // Step 2: Create a second canvas to apply the transform
             const resCanvas = document.createElement('canvas');
             const resCtx = resCanvas.getContext('2d');
 
@@ -367,33 +499,17 @@
                 resCtx.drawImage(tempCanvas, -clip.width / 2, -clip.height / 2);
             }
 
-            // Step 3: Extract the transformed ImageData back into clipboard
             state[side].clipboard = resCtx.getImageData(0, 0, resCanvas.width, resCanvas.height);
             
-            // Provide a quick visual flash to the button to show it worked
+            // Visual feedback on button
             const btn = document.querySelector(`#paste-opts-${side} button[title*="${action === 'flip' ? 'Flip' : 'Rotate'}"]`);
             if (btn) {
                 btn.style.backgroundColor = '#90EE90';
-                setTimeout(() => btn.style.backgroundColor = '#e0e0e0', 150);
+                setTimeout(() => btn.style.backgroundColor = '#f8f9fa', 150);
             }
         }
 
-        function setDrawColor(side, hexColor) {
-            // Update the hidden color input to store the current color
-            document.getElementById(`color-${side}`).value = hexColor;
-        }
-
-        function getToolSettings(x) {
-            const side = x < canvas.width / 2 ? 'left' : 'right';
-            return {
-                side: side,
-                // Reads from the hidden native color picker input
-                color: document.getElementById(`color-${side}`).value,
-                size: document.getElementById(`size-${side}`).value,
-                mode: state[side].mode
-            }
-        }
-
+        // Helper to remove white background from pasted items
         function getTransparentCanvas(imgData) {
             const tempCanvas = document.createElement('canvas');
             tempCanvas.width = imgData.width;
@@ -408,6 +524,7 @@
             
             const data = newImgData.data;
             for (let i = 0; i < data.length; i += 4) {
+                // If pixel is pure white, make it transparent
                 if (data[i] === 255 && data[i+1] === 255 && data[i+2] === 255) {
                     data[i+3] = 0;
                 }
@@ -434,8 +551,13 @@
             } else if (tools.mode === 'fill') {
                 floodFill(Math.floor(x), Math.floor(y), hexToRgb(tools.color));
                 saveState();
-            } else if (tools.mode === 'paste' && state[tools.side].clipboard) {
-                // For scalable paste, we just initialize the pointer start positions here.
+            } else if (tools.mode === 'stamp' && state[tools.side].stamp) {
+                const fontSize = tools.size * 5; // Scale emoji
+                ctx.font = `${fontSize}px sans-serif`;
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                ctx.fillText(state[tools.side].stamp, x, y);
+                saveState();
             }
         });
 
@@ -460,9 +582,10 @@
                 pointerData.x = x;
                 pointerData.y = y;
             } else if (pointerData.tools.mode === 'copy' || (pointerData.tools.mode === 'paste' && state[pointerData.tools.side].clipboard)) {
+                // Draw bounding box for copy/paste on overlay
                 overlayCtx.clearRect(0, 0, overlay.width, overlay.height);
-                overlayCtx.setLineDash([5, 5]);
-                overlayCtx.strokeStyle = pointerData.tools.mode === 'paste' ? '#00BFFF' : '#000';
+                overlayCtx.setLineDash([6, 6]);
+                overlayCtx.strokeStyle = pointerData.tools.mode === 'paste' ? '#00BFFF' : '#333';
                 overlayCtx.lineWidth = 2;
                 overlayCtx.strokeRect(pointerData.startX, pointerData.startY, x - pointerData.startX, y - pointerData.startY);
             }
@@ -501,6 +624,7 @@
                     const clip = state[pointerData.tools.side].clipboard;
                     const transparentCanvas = getTransparentCanvas(clip);
                     
+                    // Draw scalable content
                     ctx.drawImage(transparentCanvas, sx, sy, absWidth, absHeight);
                     saveState();
                 }
@@ -520,8 +644,6 @@
         function clearSide(side) {
             const width = canvas.width / 2;
             const xOffset = side === 'left' ? 0 : width;
-            
-            // Reverted to white fill for simpler kid-friendly UI
             ctx.fillStyle = '#ffffff';
             ctx.fillRect(xOffset, 0, width, canvas.height);
             saveState();
@@ -533,6 +655,61 @@
             link.href = canvas.toDataURL('image/png');
             link.click();
         }
+
+        let currentModalSide = null;
+
+        function openExtras(side) {
+            currentModalSide = side;
+            document.getElementById('extrasModal').style.display = 'flex';
+        }
+
+        function closeExtras() {
+            document.getElementById('extrasModal').style.display = 'none';
+        }
+
+        function selectStamp(emoji) {
+            if (currentModalSide) {
+                state[currentModalSide].stamp = emoji;
+                setMode(currentModalSide, 'stamp');
+                
+                // Clear active states on normal tools since a stamp is selected
+                const toolbar = document.getElementById(`${currentModalSide}-tools`);
+                const buttons = toolbar.querySelectorAll('.tool-group .tool-btn');
+                buttons.forEach(btn => btn.classList.remove('active'));
+            }
+            closeExtras();
+        }
+
+        document.getElementById('imageLoader').addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (!file || !currentModalSide) return;
+            
+            const reader = new FileReader();
+            reader.onload = function(event) {
+                const img = new Image();
+                img.onload = function() {
+                    const side = currentModalSide;
+                    const halfWidth = canvas.width / 2;
+                    const xOffset = side === 'left' ? 0 : halfWidth;
+                    
+                    // Scale image to fit within the child's half with some padding
+                    const scale = Math.min((halfWidth - 40) / img.width, (canvas.height - 40) / img.height);
+                    const drawWidth = img.width * scale;
+                    const drawHeight = img.height * scale;
+                    
+                    // Center within their specific half
+                    const drawX = xOffset + (halfWidth - drawWidth) / 2;
+                    const drawY = (canvas.height - drawHeight) / 2;
+                    
+                    ctx.drawImage(img, drawX, drawY, drawWidth, drawHeight);
+                    saveState();
+                    closeExtras();
+                }
+                img.src = event.target.result;
+            }
+            reader.readAsDataURL(file);
+            e.target.value = ''; // Reset so the same file can be loaded again
+        });
 
         function hexToRgb(hex) {
             const bigint = parseInt(hex.slice(1), 16);
@@ -547,6 +724,7 @@
             const startPos = (startY * w + startX) * 4;
             const startColor = [data[startPos], data[startPos+1], data[startPos+2], data[startPos+3]];
             
+            // Prevent infinite loop if clicking same color
             if (startColor[0] === fillColor[0] && startColor[1] === fillColor[1] && startColor[2] === fillColor[2]) return;
 
             const matchColor = (pos) => data[pos] === startColor[0] && data[pos+1] === startColor[1] && data[pos+2] === startColor[2];
@@ -558,17 +736,26 @@
             while (stack.length) {
                 let [x, y] = stack.pop();
                 let pos = (y * w + x) * 4;
+                
+                // Move up
                 while (y >= 0 && matchColor(pos)) { y--; pos -= w * 4; }
                 pos += w * 4; y++;
+                
                 let reachLeft = false; let reachRight = false;
+                
+                // Move down and check left/right
                 while (y < h && matchColor(pos)) {
                     colorPixel(pos);
                     if (x > 0) {
-                        if (matchColor(pos - 4)) { if (!reachLeft) { stack.push([x - 1, y]); reachLeft = true; } }
+                        if (matchColor(pos - 4)) { 
+                            if (!reachLeft) { stack.push([x - 1, y]); reachLeft = true; } 
+                        }
                         else if (reachLeft) reachLeft = false;
                     }
                     if (x < w - 1) {
-                        if (matchColor(pos + 4)) { if (!reachRight) { stack.push([x + 1, y]); reachRight = true; } }
+                        if (matchColor(pos + 4)) { 
+                            if (!reachRight) { stack.push([x + 1, y]); reachRight = true; } 
+                        }
                         else if (reachRight) reachRight = false;
                     }
                     y++; pos += w * 4;
