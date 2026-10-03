@@ -225,9 +225,41 @@
             transform: scale(0.85);
             box-shadow: 0 1px 2px rgba(0,0,0,0.05);
         }
+        
+        /* Portrait Warning Overlay */
+        .portrait-warning {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; width: 100vw; height: 100vh;
+            background-color: #4CAF50;
+            color: white;
+            z-index: 9999;
+            text-align: center;
+            justify-content: center;
+            align-items: center;
+            padding: 40px;
+            box-sizing: border-box;
+            font-size: 32px;
+            font-weight: 800;
+            letter-spacing: 1px;
+            line-height: 1.4;
+        }
+        @media (orientation: portrait) {
+            .portrait-warning {
+                display: flex;
+            }
+            #canvas-container, .toolbar {
+                display: none !important; /* Hide drawing app beneath to prevent accidental interactions */
+            }
+        }
     </style>
 </head>
 <body>
+
+    <!-- Portrait Warning Overlay -->
+    <div class="portrait-warning">
+        Please rotate your device sideways to draw 🎨
+    </div>
 
     <!-- Left Toolbar -->
     <div class="toolbar" id="left-tools">
@@ -388,19 +420,6 @@
         let history = [];
         let historyStep = -1;
         const activePointers = {};
-
-        // Attempt to lock screen orientation to landscape
-        async function lockLandscape() {
-            try {
-                if (screen.orientation && screen.orientation.lock) {
-                    await screen.orientation.lock('landscape');
-                }
-            } catch (error) {
-                // Silently fail if not supported or requires user gesture/fullscreen
-                console.log("Landscape lock attempt:", error);
-            }
-        }
-        lockLandscape();
 
         function resizeCanvas() {
             canvas.width = container.clientWidth;
